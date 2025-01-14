@@ -1,6 +1,5 @@
 package com.ll.spring_doc_2025_01_09.domain.post.post.controller;
 
-
 import com.ll.spring_doc_2025_01_09.domain.member.member.entity.Member;
 import com.ll.spring_doc_2025_01_09.domain.post.post.dto.PostDto;
 import com.ll.spring_doc_2025_01_09.domain.post.post.dto.PostWithContentDto;
@@ -10,6 +9,7 @@ import com.ll.spring_doc_2025_01_09.global.exceptions.ServiceException;
 import com.ll.spring_doc_2025_01_09.global.rq.Rq;
 import com.ll.spring_doc_2025_01_09.global.rsData.RsData;
 import com.ll.spring_doc_2025_01_09.standard.page.dto.PageDto;
+import com.ll.spring_doc_2025_01_09.standard.search.SearchKeywordTypeV1;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -42,6 +42,7 @@ public class ApiV1PostController {
     @Operation(summary = "통계정보")
     public PostStatisticsResBody statistics() {
         Member actor = rq.getActor();
+
         return new PostStatisticsResBody(
                 10,
                 10,
@@ -52,12 +53,13 @@ public class ApiV1PostController {
     @Transactional(readOnly = true)
     @Operation(summary = "내글 다건 조회")
     public PageDto<PostDto> mine(
-            @RequestParam(defaultValue = "title") String searchKeywordType,
+            @RequestParam(defaultValue = "title") SearchKeywordTypeV1 searchKeywordType,
             @RequestParam(defaultValue = "") String searchKeyword,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize
     ) {
         Member actor = rq.getActor();
+
         return new PageDto<>(
                 postService.findByAuthorPaged(actor, searchKeywordType, searchKeyword, page, pageSize)
                         .map(PostDto::new)
@@ -68,7 +70,7 @@ public class ApiV1PostController {
     @Transactional(readOnly = true)
     @Operation(summary = "공개글 다건 조회")
     public PageDto<PostDto> items(
-            @RequestParam(defaultValue = "title") String searchKeywordType,
+            @RequestParam(defaultValue = "title") SearchKeywordTypeV1 searchKeywordType,
             @RequestParam(defaultValue = "") String searchKeyword,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize
@@ -84,13 +86,17 @@ public class ApiV1PostController {
     @Operation(summary = "단건 조회", description = "비밀글은 작성자만 조회 가능")
     public PostWithContentDto item(@PathVariable long id) {
         Post post = postService.findById(id).get();
+
         if (!post.isPublished()) {
             Member actor = rq.getActor();
+
             if (actor == null) {
                 throw new ServiceException("401-1", "로그인이 필요합니다.");
             }
+
             post.checkActorCanRead(actor);
         }
+
         return new PostWithContentDto(post);
     }
 
@@ -114,6 +120,7 @@ public class ApiV1PostController {
             @RequestBody @Valid PostWriteReqBody reqBody
     ) {
         Member actor = rq.findByActor().get();
+
         Post post = postService.write(
                 actor,
                 reqBody.title,
@@ -121,6 +128,7 @@ public class ApiV1PostController {
                 reqBody.published,
                 reqBody.listed
         );
+
         return new RsData<>(
                 "201-1",
                 "%d번 글이 작성되었습니다.".formatted(post.getId()),
@@ -149,16 +157,22 @@ public class ApiV1PostController {
             @RequestBody @Valid PostModifyReqBody reqBody
     ) {
         Member actor = rq.getActor();
+
         Post post = postService.findById(id).get();
+
         post.checkActorCanModify(actor);
+
         postService.modify(post, reqBody.title, reqBody.content, reqBody.published, reqBody.listed);
+
         postService.flush();
+
         return new RsData<>(
                 "200-1",
                 "%d번 글이 수정되었습니다.".formatted(id),
                 new PostWithContentDto(post)
         );
     }
+
 
     @DeleteMapping("/{id}")
     @Transactional
@@ -167,9 +181,13 @@ public class ApiV1PostController {
             @PathVariable long id
     ) {
         Member member = rq.getActor();
+
         Post post = postService.findById(id).get();
+
         post.checkActorCanDelete(member);
+
         postService.delete(post);
+
         return new RsData<>("200-1", "%d번 글이 삭제되었습니다.".formatted(id));
     }
 }
