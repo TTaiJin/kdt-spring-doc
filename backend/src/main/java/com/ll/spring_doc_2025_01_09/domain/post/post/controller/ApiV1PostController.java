@@ -97,6 +97,7 @@ public class ApiV1PostController {
     }
     @PostMapping
     @Transactional
+    @Operation(summary = "글 작성")
     public RsData<PostWithContentDto> write(
             @RequestBody @Valid PostWriteReqBody reqBody
     ) {
