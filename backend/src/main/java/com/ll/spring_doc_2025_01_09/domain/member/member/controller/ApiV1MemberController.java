@@ -8,6 +8,7 @@ import com.ll.spring_doc_2025_01_09.global.exceptions.ServiceException;
 import com.ll.spring_doc_2025_01_09.global.rq.Rq;
 import com.ll.spring_doc_2025_01_09.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -18,10 +19,16 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/members")
 @RequiredArgsConstructor
 @Tag(name = "ApiV1MemberController", description = "API 회원 컨트롤러")
+@SecurityRequirement(name = "bearerAuth")
 public class ApiV1MemberController {
+
     private final MemberService memberService;
+
     private final AuthTokenService authTokenService;
+
     private final Rq rq;
+
+
     record MemberJoinReqBody(
             @NotBlank
             String username,
@@ -31,6 +38,7 @@ public class ApiV1MemberController {
             String nickname
     ) {
     }
+
     @PostMapping("/join")
     @Transactional
     @Operation(summary = "회원가입")
@@ -44,6 +52,8 @@ public class ApiV1MemberController {
                 new MemberDto(member)
         );
     }
+
+
     record MemberLoginReqBody(
             @NotBlank
             String username,
@@ -51,12 +61,14 @@ public class ApiV1MemberController {
             String password
     ) {
     }
+
     record MemberLoginResBody(
             MemberDto item,
             String apiKey,
             String accessToken
     ) {
     }
+
     @PostMapping("/login")
     @Transactional(readOnly = true)
     @Operation(summary = "로그인", description = "apiKey, accessToken을 발급합니다. 해당 토큰들은 쿠키(HTTP-ONLY)로도 전달됩니다.")
@@ -81,6 +93,7 @@ public class ApiV1MemberController {
                 )
         );
     }
+
     @DeleteMapping("/logout")
     @Transactional(readOnly = true)
     @Operation(summary = "로그아웃", description = "apiKey, accessToken 토큰을 제거합니다.")
@@ -92,6 +105,7 @@ public class ApiV1MemberController {
                 "로그아웃 되었습니다."
         );
     }
+
     @GetMapping("/me")
     @Transactional(readOnly = true)
     @Operation(summary = "내 정보")

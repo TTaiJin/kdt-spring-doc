@@ -11,6 +11,7 @@ import com.ll.spring_doc_2025_01_09.global.rq.Rq;
 import com.ll.spring_doc_2025_01_09.global.rsData.RsData;
 import com.ll.spring_doc_2025_01_09.standard.page.dto.PageDto;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,19 +19,24 @@ import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+
 @RestController
 @RequestMapping("/api/v1/posts")
 @RequiredArgsConstructor
 @Tag(name = "ApiV1PostController", description = "API 글 컨트롤러")
+@SecurityRequirement(name = "bearerAuth")
 public class ApiV1PostController {
     private final PostService postService;
     private final Rq rq;
+
+
     record PostStatisticsResBody(
             long totalPostCount,
             long totalPublishedPostCount,
             long totalListedPostCount
     ) {
     }
+
     @GetMapping("/statistics")
     @Transactional(readOnly = true)
     @Operation(summary = "통계정보")
@@ -41,6 +47,7 @@ public class ApiV1PostController {
                 10,
                 10);
     }
+
     @GetMapping("/mine")
     @Transactional(readOnly = true)
     @Operation(summary = "내글 다건 조회")
@@ -56,6 +63,7 @@ public class ApiV1PostController {
                         .map(PostDto::new)
         );
     }
+
     @GetMapping
     @Transactional(readOnly = true)
     @Operation(summary = "공개글 다건 조회")
@@ -70,6 +78,7 @@ public class ApiV1PostController {
                         .map(PostDto::new)
         );
     }
+
     @GetMapping("/{id}")
     @Transactional(readOnly = true)
     @Operation(summary = "단건 조회", description = "비밀글은 작성자만 조회 가능")
@@ -84,6 +93,8 @@ public class ApiV1PostController {
         }
         return new PostWithContentDto(post);
     }
+
+
     record PostWriteReqBody(
             @NotBlank
             @Length(min = 2, max = 100)
@@ -95,6 +106,7 @@ public class ApiV1PostController {
             boolean listed
     ) {
     }
+
     @PostMapping
     @Transactional
     @Operation(summary = "작성")
@@ -115,6 +127,8 @@ public class ApiV1PostController {
                 new PostWithContentDto(post)
         );
     }
+
+
     record PostModifyReqBody(
             @NotBlank
             @Length(min = 2, max = 100)
@@ -126,6 +140,7 @@ public class ApiV1PostController {
             boolean listed
     ) {
     }
+
     @PutMapping("/{id}")
     @Transactional
     @Operation(summary = "수정")
@@ -144,6 +159,7 @@ public class ApiV1PostController {
                 new PostWithContentDto(post)
         );
     }
+
     @DeleteMapping("/{id}")
     @Transactional
     @Operation(summary = "삭제", description = "작성자 본인 뿐 아니라 관리자도 삭제 가능")
